@@ -1,0 +1,266 @@
+/* All visual changes are scoped to the body attribute owned by apply(). */
+
+body[data-dsh-custom-background] {
+  --dsw-alias-bg-base: rgba(255, 255, 255, 0.56);
+  --dsw-alias-bg-layer-1: rgba(255, 255, 255, 0.66);
+  --dsw-alias-bg-layer-2: rgba(252, 249, 253, 0.72);
+  --dsw-alias-bg-layer-3: rgba(249, 245, 251, 0.78);
+  --dsw-alias-bg-module-platform: rgba(255, 255, 255, 0.68);
+  --dsw-alias-bg-overlay: rgba(255, 255, 255, 0.94);
+  --dsw-alias-button-tool-bar-fill: rgba(255, 255, 255, 0.72);
+  --dsw-alias-border-l1: rgba(77, 53, 83, 0.12);
+  --dsw-alias-border-l2: rgba(77, 53, 83, 0.18);
+  --dsw-alias-border-l3: rgba(77, 53, 83, 0.24);
+  background-color: transparent !important;
+}
+
+body[data-dsh-custom-background][data-ds-dark-theme] {
+  --dsw-alias-bg-base: rgba(21, 18, 31, 0.68);
+  --dsw-alias-bg-layer-1: rgba(27, 23, 39, 0.76);
+  --dsw-alias-bg-layer-2: rgba(33, 28, 46, 0.80);
+  --dsw-alias-bg-layer-3: rgba(39, 33, 53, 0.84);
+  --dsw-alias-bg-module-platform: rgba(29, 25, 42, 0.78);
+  --dsw-alias-bg-overlay: rgba(35, 30, 48, 0.96);
+  --dsw-alias-button-tool-bar-fill: rgba(42, 36, 56, 0.84);
+  --dsw-alias-border-l1: rgba(236, 226, 241, 0.12);
+  --dsw-alias-border-l2: rgba(236, 226, 241, 0.18);
+  --dsw-alias-border-l3: rgba(236, 226, 241, 0.26);
+}
+
+body[data-dsh-custom-background] [id='root'] {
+  background: transparent;
+}
+
+body[data-dsh-custom-background] .settingsSection {
+  width: min(100%, 640px);
+  padding: 8px 4px 24px;
+  display: grid;
+  gap: 28px;
+}
+
+body[data-dsh-custom-background] .settingsHeader {
+  margin-bottom: -4px;
+}
+
+body[data-dsh-custom-background] .settingsTitle {
+  margin: 0;
+  color: var(--dsw-alias-label-primary, #172a45);
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+body[data-dsh-custom-background] .settingsControl {
+  display: grid;
+  gap: 12px;
+}
+
+body[data-dsh-custom-background] .settingsControlHead {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+body[data-dsh-custom-background] .settingsLabel {
+  color: var(--dsw-alias-label-primary, #172a45);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+body[data-dsh-custom-background] .settingsValue {
+  flex: none;
+  margin-left: auto;
+  color: var(--dsw-alias-brand-primary, #2b7cd9);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-dsh-custom-background] .settingsRange {
+  width: 100%;
+  height: 4px;
+  margin: 0;
+  border-radius: 2px;
+  background: var(--dsw-alias-bg-layer-3, #e2e8f0);
+  box-shadow: 0 0 0 1px var(--dsw-alias-border-l3, #cbd5e1);
+  appearance: none;
+  cursor: pointer;
+}
+
+body[data-dsh-custom-background] .settingsRange::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--dsw-alias-label-primary-foreground, #fff);
+  border-radius: 50%;
+  background: var(--dsw-alias-brand-primary, #2b7cd9);
+  box-shadow: 0 0 0 1px var(--dsw-alias-border-l4, rgb(15 23 42 / 0.12));
+  appearance: none;
+}
+
+body[data-dsh-custom-background] .settingsRange::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--dsw-alias-label-primary-foreground, #fff);
+  border-radius: 50%;
+  background: var(--dsw-alias-brand-primary, #2b7cd9);
+  box-shadow: 0 0 0 1px var(--dsw-alias-border-l4, rgb(15 23 42 / 0.12));
+}
+
+body[data-dsh-custom-background] .settingsRange:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary, #2b7cd9);
+  outline-offset: 4px;
+}
+
+body[data-dsh-custom-background] .settingsRangeEnds {
+  display: flex;
+  justify-content: space-between;
+  color: var(--dsw-alias-label-tertiary, #9aa4b5);
+  font-size: 11px;
+  line-height: 1;
+}
+
+body[data-dsh-custom-background] .petRoot {
+  position: fixed;
+  right: 18px;
+  bottom: 10px;
+  z-index: 2147482000;
+  width: clamp(150px, 24vw, 220px);
+  aspect-ratio: 400 / 381;
+  pointer-events: auto;
+  user-select: none;
+  contain: layout style;
+  cursor: grab;
+}
+
+body[data-dsh-custom-background] .petRoot[data-dragging] {
+  cursor: grabbing;
+}
+
+body[data-dsh-custom-background] .petRoot[data-pet-id='secondary'] {
+  right: 230px;
+  aspect-ratio: 1;
+}
+
+body[data-dsh-custom-background] .petImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 10px rgb(30 18 38 / 0.24));
+  touch-action: none;
+  cursor: inherit;
+}
+
+body[data-dsh-custom-background] .settingsToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--dsw-alias-label-primary, #172a45);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+body[data-dsh-custom-background] .settingsToggle input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--dsw-alias-brand-primary, #2b7cd9);
+}
+
+body[data-dsh-custom-background] .petSettingsList {
+  display: grid;
+  gap: 28px;
+}
+
+body[data-dsh-custom-background] .petSettingsItem {
+  display: grid;
+  gap: 14px;
+  padding-bottom: 4px;
+}
+
+body[data-dsh-custom-background] .petSettingsName {
+  margin: 0;
+  color: var(--dsw-alias-label-primary, #172a45);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+body[data-dsh-custom-background] .petBubble {
+  position: absolute;
+  right: 58%;
+  bottom: 82%;
+  width: max-content;
+  max-width: min(250px, calc(100vw - 24px));
+  padding: 9px 12px;
+  border: 1px solid rgb(96 69 105 / 0.2);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.94);
+  box-shadow: 0 8px 24px rgb(31 22 38 / 0.18);
+  color: #312539;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0;
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  transform-origin: right bottom;
+}
+
+body[data-dsh-custom-background] .petBubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 22px;
+  width: 10px;
+  height: 10px;
+  border-right: 1px solid rgb(96 69 105 / 0.2);
+  border-bottom: 1px solid rgb(96 69 105 / 0.2);
+  background: rgb(255 255 255 / 0.94);
+  transform: translateY(-5px) rotate(45deg);
+}
+
+body[data-dsh-custom-background] .petRoot[data-speaking] .petBubble {
+  animation: custom-pet-speech 4.8s ease forwards;
+}
+
+@keyframes custom-pet-speech {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  10%, 78% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.98);
+  }
+}
+
+@media (max-width: 520px) {
+  body[data-dsh-custom-background] .petRoot {
+    right: 8px;
+    bottom: 8px;
+    width: 150px;
+  }
+
+  body[data-dsh-custom-background] .petRoot[data-pet-id='secondary'] {
+    right: 165px;
+  }
+
+  body[data-dsh-custom-background] .petBubble {
+    right: 48%;
+    max-width: calc(100vw - 20px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-dsh-custom-background] .petRoot[data-speaking] .petBubble {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

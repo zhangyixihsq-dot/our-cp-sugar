@@ -1,0 +1,7 @@
+# Bundle patch for our-cp-sugar: inserts its plugin row into the web
+# profile roster. Applied as a profile bundle layer (the `dsh.bundle.patch`
+# manifest field); install with
+# `dsh plugin --profile web add link:/absolute/path/to/our-cp-sugar`.
+- insert:
+    - id: ui-custom-background
+      name: 'our-cp-sugar'
