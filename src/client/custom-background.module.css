@@ -62,6 +62,132 @@ body[data-dsh-custom-background] .settingsControlHead {
   gap: 16px;
 }
 
+body[data-dsh-custom-background] .uploadActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+body[data-dsh-custom-background] .uploadButton {
+  padding: 6px 10px;
+  border: 1px solid var(--dsw-alias-border-l2, #cbd5e1);
+  border-radius: 6px;
+  background: var(--dsw-alias-bg-layer-1, rgb(255 255 255 / 0.72));
+  color: var(--dsw-alias-label-primary, #172a45);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+body[data-dsh-custom-background] .uploadButton:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+body[data-dsh-custom-background] .fileInput {
+  display: none;
+}
+
+body[data-dsh-custom-background] .uploadStatus {
+  margin: 0;
+  color: var(--dsw-alias-label-secondary, #52637a);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+body[data-dsh-custom-background] .cropOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgb(14 10 22 / 0.62);
+}
+
+body[data-dsh-custom-background] .cropDialog {
+  width: min(640px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid var(--dsw-alias-border-l2, rgb(255 255 255 / 0.16));
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-overlay, rgb(255 255 255 / 0.96));
+  box-shadow: 0 24px 64px rgb(9 6 16 / 0.34);
+}
+
+body[data-dsh-custom-background] .cropHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+body[data-dsh-custom-background] .cropTitle {
+  margin: 0;
+  color: var(--dsw-alias-label-primary, #172a45);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+body[data-dsh-custom-background] .cropBody {
+  display: grid;
+  gap: 14px;
+}
+
+body[data-dsh-custom-background] .cropViewport {
+  position: relative;
+  width: 560px;
+  height: 315px;
+  overflow: hidden;
+  background: #0f0c16;
+  border: 1px solid var(--dsw-alias-border-l3, rgb(255 255 255 / 0.2));
+  border-radius: 6px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+body[data-dsh-custom-background] .cropViewport:active {
+  cursor: grabbing;
+}
+
+body[data-dsh-custom-background] .cropImage {
+  position: absolute;
+  display: block;
+  max-width: none;
+  max-height: none;
+  pointer-events: none;
+  user-select: none;
+}
+
+body[data-dsh-custom-background] .cropGrid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, transparent calc(33.333% - 0.5px), rgb(255 255 255 / 0.5) calc(33.333% - 0.5px), rgb(255 255 255 / 0.5) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px)),
+    linear-gradient(to right, transparent calc(66.666% - 0.5px), rgb(255 255 255 / 0.5) calc(66.666% - 0.5px), rgb(255 255 255 / 0.5) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(33.333% - 0.5px), rgb(255 255 255 / 0.5) calc(33.333% - 0.5px), rgb(255 255 255 / 0.5) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(66.666% - 0.5px), rgb(255 255 255 / 0.5) calc(66.666% - 0.5px), rgb(255 255 255 / 0.5) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px));
+}
+
+body[data-dsh-custom-background] .cropZoom {
+  display: grid;
+  gap: 8px;
+}
+
+body[data-dsh-custom-background] .cropActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
 body[data-dsh-custom-background] .settingsLabel {
   color: var(--dsw-alias-label-primary, #172a45);
   font-size: 13px;
@@ -151,6 +277,30 @@ body[data-dsh-custom-background] .petImage {
   cursor: inherit;
 }
 
+body[data-dsh-custom-background] .petInteractButton {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  z-index: 2;
+  padding: 5px 12px;
+  border: 1px solid var(--dsw-alias-border-l2, rgb(255 255 255 / 0.2));
+  border-radius: 999px;
+  background: var(--dsw-alias-bg-overlay, rgb(255 255 255 / 0.96));
+  color: var(--dsw-alias-label-primary, #172a45);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.4;
+  transform: translateX(-50%);
+  box-shadow: 0 6px 18px rgb(20 14 28 / 0.22);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+body[data-dsh-custom-background] .petInteractButton[hidden] {
+  display: none;
+}
+
 body[data-dsh-custom-background] .settingsToggle {
   display: inline-flex;
   align-items: center;
@@ -185,6 +335,78 @@ body[data-dsh-custom-background] .petSettingsName {
   font-size: 14px;
   font-weight: 650;
   line-height: 1.4;
+}
+
+body[data-dsh-custom-background] .personalityInput {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 76px;
+  padding: 9px 10px;
+  border: 1px solid var(--dsw-alias-border-l2, #cbd5e1);
+  border-radius: 6px;
+  background: var(--dsw-alias-bg-layer-1, rgb(255 255 255 / 0.72));
+  color: var(--dsw-alias-label-primary, #172a45);
+  font: inherit;
+  line-height: 1.45;
+}
+
+body[data-dsh-custom-background] .personalityInput:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary, #2b7cd9);
+  outline-offset: 2px;
+}
+
+body[data-dsh-custom-background] .interactionRecords {
+  display: grid;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--dsw-alias-border-l1, rgb(77 53 83 / 0.12));
+}
+
+body[data-dsh-custom-background] .recordList {
+  display: grid;
+  gap: 8px;
+}
+
+body[data-dsh-custom-background] .recordItem {
+  padding: 8px 10px;
+  border: 1px solid var(--dsw-alias-border-l1, rgb(77 53 83 / 0.12));
+  border-radius: 6px;
+  background: var(--dsw-alias-bg-layer-1, rgb(255 255 255 / 0.52));
+}
+
+body[data-dsh-custom-background] .recordItem summary {
+  cursor: pointer;
+  color: var(--dsw-alias-label-primary, #172a45);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+body[data-dsh-custom-background] .recordTurns {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0;
+  color: var(--dsw-alias-label-secondary, #52637a);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+body[data-dsh-custom-background] .recordTurns p { margin: 0; }
+body[data-dsh-custom-background] .recordEmpty {
+  margin: 0;
+  color: var(--dsw-alias-label-tertiary, #9aa4b5);
+  font-size: 12px;
+}
+body[data-dsh-custom-background] .recordAction {
+  justify-self: start;
+  padding: 3px 7px;
+  border: 1px solid var(--dsw-alias-border-l2, #cbd5e1);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #52637a);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
 }
 
 body[data-dsh-custom-background] .petBubble {

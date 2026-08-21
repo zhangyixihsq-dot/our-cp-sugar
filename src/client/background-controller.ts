@@ -1,5 +1,6 @@
 const LIGHTNESS_STORAGE_KEY = 'dsh-custom-background.lightness'
 const SATURATION_STORAGE_KEY = 'dsh-custom-background.saturation'
+const CUSTOM_IMAGE_STORAGE_KEY = 'dsh-custom-background.custom-image'
 
 const SCRIM_LIGHT = 'linear-gradient(rgba(255, 255, 255, 0.04), rgba(248, 244, 252, 0.10))'
 const SCRIM_DARK = 'linear-gradient(rgba(15, 11, 24, 0.48), rgba(11, 9, 20, 0.62))'
@@ -33,6 +34,14 @@ function readSaturation(): number {
   }
 }
 
+function readCustomImage(): string | undefined {
+  try {
+    return window.localStorage.getItem(CUSTOM_IMAGE_STORAGE_KEY) ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
 function styleLayer(element: HTMLDivElement, zIndex: number): void {
   element.style.position = 'fixed'
   element.style.inset = '0'
@@ -46,6 +55,9 @@ export interface BackgroundHandle {
   setLightness(value: number): void
   saturation(): number
   setSaturation(value: number): void
+  isCustom(): boolean
+  setImage(dataUrl: string): void
+  resetImage(): void
   subscribe(listener: () => void): () => void
 }
 
@@ -53,17 +65,19 @@ export interface BackgroundHandle {
 export class BackgroundController implements BackgroundHandle {
   private readonly wallpaper = document.createElement('div')
   private readonly scrim = document.createElement('div')
+  private readonly defaultArt: string
   private readonly listeners = new Set<() => void>()
   private readonly themeObserver: MutationObserver
   private lightnessValue = readLightness()
   private saturationValue = readSaturation()
+  private customValue = readCustomImage()
 
   constructor(art: string) {
+    this.defaultArt = art
     this.wallpaper.dataset.dshCustomBackgroundLayer = 'wallpaper'
     this.scrim.dataset.dshCustomBackgroundLayer = 'scrim'
     styleLayer(this.wallpaper, -3)
     styleLayer(this.scrim, -2)
-    this.wallpaper.style.backgroundImage = `url(${art})`
     this.wallpaper.style.backgroundPosition = 'center center'
     this.wallpaper.style.backgroundSize = 'cover'
     this.wallpaper.style.backgroundRepeat = 'no-repeat'
@@ -111,6 +125,34 @@ export class BackgroundController implements BackgroundHandle {
     this.notify()
   }
 
+  isCustom(): boolean {
+    return this.customValue !== undefined
+  }
+
+  setImage(dataUrl: string): void {
+    if (!dataUrl.startsWith('data:')) return
+    this.customValue = dataUrl
+    try {
+      window.localStorage.setItem(CUSTOM_IMAGE_STORAGE_KEY, dataUrl)
+    } catch {
+      // Persistence is optional in restricted browser contexts.
+    }
+    this.renderWallpaper()
+    this.notify()
+  }
+
+  resetImage(): void {
+    if (this.customValue === undefined) return
+    this.customValue = undefined
+    try {
+      window.localStorage.removeItem(CUSTOM_IMAGE_STORAGE_KEY)
+    } catch {
+      // Persistence is optional in restricted browser contexts.
+    }
+    this.renderWallpaper()
+    this.notify()
+  }
+
   subscribe(listener: () => void): () => void {
     this.listeners.add(listener)
     return () => { this.listeners.delete(listener) }
@@ -129,6 +171,7 @@ export class BackgroundController implements BackgroundHandle {
   }
 
   private renderWallpaper(): void {
+    this.wallpaper.style.backgroundImage = `url(${this.customValue ?? this.defaultArt})`
     this.wallpaper.style.filter = `saturate(${this.saturationValue}%)`
   }
 

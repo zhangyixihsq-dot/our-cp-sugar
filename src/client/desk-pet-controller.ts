@@ -7,6 +7,7 @@ const RECENT_START_MS = 1600
 const VISIBLE_STORAGE_KEY = 'dsh-custom-background.pet-visible'
 const SIZE_STORAGE_PREFIX = 'dsh-custom-background.pet-size.'
 const POSITION_STORAGE_PREFIX = 'dsh-custom-background.pet-position.'
+const PERSONALITY_STORAGE_PREFIX = 'dsh-custom-background.pet-personality.'
 
 export interface DesktopPetHandle {
   visible(): boolean
@@ -14,6 +15,10 @@ export interface DesktopPetHandle {
   size(): number
   setSize(value: number): void
   subscribe(listener: () => void): () => void
+  onInteract(listener: () => void): () => void
+  personality(): string
+  setPersonality(value: string): void
+  speak(text: string): void
 }
 
 export interface DesktopPetOptions {
@@ -22,6 +27,7 @@ export interface DesktopPetOptions {
   activityKind?: 'start' | 'end'
   activityPhrase?: string
   defaultSize?: number
+  defaultPersonality?: string
   autoStart?: boolean
   fetcher?: typeof fetch
   pollMs?: number
@@ -32,6 +38,7 @@ export class DesktopPetController implements DesktopPetHandle {
   private readonly root = document.createElement('aside')
   private readonly bubble = document.createElement('div')
   private readonly image = document.createElement('img')
+  private readonly interactButton = document.createElement('button')
   private readonly fetcher: typeof fetch
   private readonly pollMs: number
   private readonly id: string
@@ -39,11 +46,13 @@ export class DesktopPetController implements DesktopPetHandle {
   private readonly activityKind: 'start' | 'end'
   private readonly activityPhrase: string
   private readonly listeners = new Set<() => void>()
+  private readonly interactListeners = new Set<() => void>()
   private pollTimer: number | undefined
   private bubbleTimer: number | undefined
   private lastActivitySequence: number | undefined
   private visibleValue: boolean
   private sizeValue: number
+  private personalityValue: string
   private drag: { startX: number; startY: number; right: number; bottom: number } | undefined
   private dragged = false
   private disposed = false
@@ -57,6 +66,7 @@ export class DesktopPetController implements DesktopPetHandle {
     this.activityPhrase = options.activityPhrase ?? (this.activityKind === 'end' ? PET_END_PHRASE : PET_START_PHRASE)
     this.visibleValue = readVisible(this.id)
     this.sizeValue = readSize(this.id, options.defaultSize ?? 220)
+    this.personalityValue = readPersonality(this.id, options.defaultPersonality ?? '')
 
     this.root.className = css.petRoot
     this.root.dataset.dshCustomPet = ''
@@ -73,7 +83,11 @@ export class DesktopPetController implements DesktopPetHandle {
     this.image.alt = ''
     this.image.draggable = false
     this.image.setAttribute('aria-hidden', 'true')
-    this.root.append(this.bubble, this.image)
+    this.interactButton.className = css.petInteractButton
+    this.interactButton.type = 'button'
+    this.interactButton.textContent = document.documentElement.lang.toLowerCase().startsWith('zh') ? '互动' : 'Chat'
+    this.interactButton.hidden = true
+    this.root.append(this.bubble, this.image, this.interactButton)
     document.body.appendChild(this.root)
     document.addEventListener('visibilitychange', this.onVisibilityChange)
     this.image.addEventListener('pointerdown', this.onPointerDown)
@@ -81,6 +95,9 @@ export class DesktopPetController implements DesktopPetHandle {
     this.image.addEventListener('pointerup', this.onPointerUp)
     this.image.addEventListener('pointercancel', this.onPointerUp)
     this.image.addEventListener('click', this.onClick)
+    this.root.addEventListener('mouseenter', this.onMouseEnter)
+    this.root.addEventListener('mouseleave', this.onMouseLeave)
+    this.interactButton.addEventListener('click', this.onInteractClick)
     if (options.autoStart !== false) this.start()
   }
 
@@ -147,6 +164,23 @@ export class DesktopPetController implements DesktopPetHandle {
     return () => { this.listeners.delete(listener) }
   }
 
+  onInteract(listener: () => void): () => void {
+    this.interactListeners.add(listener)
+    return () => { this.interactListeners.delete(listener) }
+  }
+
+  personality(): string { return this.personalityValue }
+
+  setPersonality(value: string): void {
+    const next = value.trim().slice(0, 4000)
+    if (next === this.personalityValue) return
+    this.personalityValue = next
+    try { window.localStorage.setItem(PERSONALITY_STORAGE_PREFIX + this.id, next) } catch { /* optional */ }
+    this.notify()
+  }
+
+  speak(text: string): void { this.showBubble(text) }
+
   dispose(): void {
     this.disposed = true
     if (this.pollTimer !== undefined) window.clearInterval(this.pollTimer)
@@ -157,12 +191,35 @@ export class DesktopPetController implements DesktopPetHandle {
     this.image.removeEventListener('pointerup', this.onPointerUp)
     this.image.removeEventListener('pointercancel', this.onPointerUp)
     this.image.removeEventListener('click', this.onClick)
+    this.root.removeEventListener('mouseenter', this.onMouseEnter)
+    this.root.removeEventListener('mouseleave', this.onMouseLeave)
+    this.interactButton.removeEventListener('click', this.onInteractClick)
     this.listeners.clear()
+    this.interactListeners.clear()
     this.root.remove()
   }
 
   private readonly onVisibilityChange = (): void => {
     if (document.visibilityState === 'visible') void this.refresh()
+  }
+
+  private readonly onMouseEnter = (): void => {
+    if (this.disposed || !this.visibleValue || this.drag !== undefined) return
+    this.interactButton.hidden = false
+  }
+
+  private readonly onMouseLeave = (): void => {
+    this.interactButton.hidden = true
+  }
+
+  private readonly onInteractClick = (): void => {
+    if (this.disposed) return
+    if (this.interactListeners.size === 0) {
+      console.warn('[our-cp-sugar] 桌宠互动服务尚未就绪')
+      this.showBubble(document.documentElement.lang.toLowerCase().startsWith('zh') ? '互动服务尚未就绪' : 'Interaction is not ready')
+      return
+    }
+    for (const listener of this.interactListeners) listener()
   }
 
   private showBubble(text: string): void {
@@ -195,6 +252,7 @@ export class DesktopPetController implements DesktopPetHandle {
 
   private readonly onPointerDown = (event: PointerEvent): void => {
     if (this.disposed || !this.visibleValue) return
+    this.interactButton.hidden = true
     event.preventDefault()
     this.image.setPointerCapture?.(event.pointerId)
     const rect = this.root.getBoundingClientRect()
@@ -249,4 +307,8 @@ function readSize(id: string, fallback: number): number {
     const value = stored === null ? fallback : Number(stored)
     return Number.isFinite(value) ? Math.max(100, Math.min(360, Math.round(value))) : fallback
   } catch { return fallback }
+}
+
+function readPersonality(id: string, fallback: string): string {
+  try { return window.localStorage.getItem(PERSONALITY_STORAGE_PREFIX + id) ?? fallback } catch { return fallback }
 }

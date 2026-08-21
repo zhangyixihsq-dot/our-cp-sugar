@@ -9,6 +9,7 @@ import { BackgroundSettingsSection } from './BackgroundSettingsSection.tsx'
 import { DesktopPetController } from './desk-pet-controller.ts'
 import { PetSettingsSection } from './PetSettingsSection.tsx'
 import { PET_END_PHRASE, PET_START_PHRASE } from '../pet-state.ts'
+import { DesktopPetInteractionController } from './pet-interaction.ts'
 import './custom-background.module.css'
 
 const BODY_ATTRIBUTE = 'data-dsh-custom-background'
@@ -28,6 +29,8 @@ export function apply(ctx: ClientContext): void {
     activityKind: 'start',
     activityPhrase: PET_START_PHRASE,
     defaultSize: 220,
+    defaultPersonality: '你是哥伦比娅：冷静、神秘、偶尔温柔，使用简洁而带有诗意的中文。',
+    autoStart: false,
   })
   const secondPet = new DesktopPetController(SECOND_PET_ART, {
     id: 'secondary',
@@ -35,6 +38,12 @@ export function apply(ctx: ClientContext): void {
     activityKind: 'end',
     activityPhrase: PET_END_PHRASE,
     defaultSize: 180,
+    defaultPersonality: '你是桑多涅：直率、慵懒、嘴硬但关心对方，使用自然的中文口语。',
+    autoStart: false,
+  })
+  let interactions: DesktopPetInteractionController | undefined
+  ctx.inject(['sessions'], (sessionCtx: ClientContext) => {
+    interactions = new DesktopPetInteractionController(sessionCtx.sessions, { primary: desktopPet, secondary: secondPet })
   })
 
   ctx.inject(['slots'], (settingsCtx: ClientContext) => {
@@ -56,13 +65,14 @@ export function apply(ctx: ClientContext): void {
       inject: () => ({ pets: [
         { id: 'primary', label: '哥伦比娅', pet: desktopPet },
         { id: 'secondary', label: '桑多涅', pet: secondPet },
-      ] }),
+      ], ...(interactions === undefined ? {} : { interactions }) }),
     }, PetSettingsSection))
   })
 
   ctx.effect(() => () => {
     desktopPet.dispose()
     secondPet.dispose()
+    interactions?.dispose()
     background.dispose()
     if (hadAttribute) {
       body.setAttribute(BODY_ATTRIBUTE, previousAttribute ?? '')
