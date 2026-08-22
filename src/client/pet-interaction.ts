@@ -1,5 +1,6 @@
-import type { ISessions, SessionFace, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { ISessions, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
 import type { DesktopPetHandle } from './desk-pet-controller.ts'
+import { latestAssistant, openSession, waitForAssistant } from './session-helpers.ts'
 
 const RECORDS_KEY = 'dsh-custom-background.pet-interactions'
 const MAX_ROUNDS = 10
@@ -126,39 +127,6 @@ export class DesktopPetInteractionController implements PetInteractionManager {
   }
 
   private notify(): void { for (const listener of this.listeners) listener() }
-}
-
-type OpenableSessionFace = SessionFace & { open(): Promise<void> }
-
-async function openSession(session: SessionFace): Promise<void> {
-  const openable = session as OpenableSessionFace
-  if (typeof openable.open === 'function') await openable.open()
-}
-
-async function waitForAssistant(session: SessionFace, previous: string): Promise<string> {
-  const existing = latestAssistant(session)
-  if (!session.getSnapshot().running && existing && existing !== previous) return existing
-  return await new Promise(resolve => {
-    let settled = false
-    const finish = (value: string): void => {
-      if (settled) return
-      settled = true
-      stop()
-      resolve(value)
-    }
-    const stop = session.subscribe(() => {
-      const snapshot = session.getSnapshot()
-      const latest = latestAssistant(session)
-      if (!snapshot.running && latest && latest !== previous) finish(latest)
-    })
-    window.setTimeout(() => finish(latestAssistant(session) === previous ? '' : latestAssistant(session)), 120000)
-  })
-}
-
-function latestAssistant(session: SessionFace): string {
-  const node = [...session.getSnapshot().nodes].reverse().find(item => item.kind === 'assistant')
-  if (node === undefined || node.kind !== 'assistant') return ''
-  return node.blocks.filter(block => block.kind === 'text').map(block => block.text).join('').trim()
 }
 
 function wait(ms: number): Promise<void> {

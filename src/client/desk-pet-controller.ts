@@ -1,5 +1,6 @@
 import css from './custom-background.module.css'
 import { isPetActivityState, PET_ACTIVITY_ENDPOINT, PET_END_PHRASE, PET_START_PHRASE } from '../pet-state.ts'
+import type { PetPhraseProvider, PetPhraseKind } from './pet-phrase.ts'
 
 const DEFAULT_POLL_MS = 400
 const BUBBLE_VISIBLE_MS = 4800
@@ -28,6 +29,7 @@ export interface DesktopPetHandle {
   resetImage(): void
   personality(): string
   setPersonality(value: string): void
+  setPhraseProvider(provider: PetPhraseProvider): void
   speak(text: string): void
 }
 
@@ -70,6 +72,8 @@ export class DesktopPetController implements DesktopPetHandle {
   private imageObjectUrl: string | undefined
   private imageRevision = 0
   private personalityValue: string
+  private phraseProvider: PetPhraseProvider | undefined
+  private phraseGeneration = 0
   private drag: { startX: number; startY: number; right: number; bottom: number } | undefined
   private dragged = false
   private disposed = false
@@ -141,13 +145,13 @@ export class DesktopPetController implements DesktopPetHandle {
       const activityAt = this.activityKind === 'end' ? state.completedAt : state.startedAt
       if (this.lastActivitySequence === undefined) {
         this.lastActivitySequence = activitySequence
-        if (activitySequence > 0 && Date.now() - activityAt <= RECENT_START_MS) this.showBubble(this.activityPhrase)
+        if (activitySequence > 0 && Date.now() - activityAt <= RECENT_START_MS) void this.showGeneratedPhrase('activity', this.activityPhrase)
         return
       }
       if (activitySequence === this.lastActivitySequence) return
       const movedForward = activitySequence > this.lastActivitySequence
       this.lastActivitySequence = activitySequence
-      if (movedForward) this.showBubble(this.activityPhrase)
+      if (movedForward) void this.showGeneratedPhrase('activity', this.activityPhrase)
     } catch {
       // The host route may be unavailable briefly while the profile reloads.
     }
@@ -254,6 +258,10 @@ export class DesktopPetController implements DesktopPetHandle {
     this.notify()
   }
 
+  setPhraseProvider(provider: PetPhraseProvider): void {
+    this.phraseProvider = provider
+  }
+
   speak(text: string): void { this.showBubble(text) }
 
   dispose(): void {
@@ -297,6 +305,22 @@ export class DesktopPetController implements DesktopPetHandle {
       return
     }
     for (const listener of this.interactListeners) listener()
+  }
+
+  private async showGeneratedPhrase(kind: PetPhraseKind, fallback: string | undefined): Promise<void> {
+    const generation = ++this.phraseGeneration
+    if (this.phraseProvider !== undefined) {
+      try {
+        const text = await this.phraseProvider(kind)
+        if (this.disposed || generation !== this.phraseGeneration) return
+        const trimmed = text.trim()
+        if (trimmed !== '') { this.showBubble(trimmed); return }
+      } catch {
+        // Fall through to the static phrase when generation fails.
+      }
+    }
+    if (this.disposed || generation !== this.phraseGeneration) return
+    if (fallback !== undefined) this.showBubble(fallback)
   }
 
   private showBubble(text: string): void {
@@ -365,7 +389,7 @@ export class DesktopPetController implements DesktopPetHandle {
 
   private readonly onClick = (): void => {
     if (this.dragged) { this.dragged = false; return }
-    if (this.clickPhrase !== undefined) this.showBubble(this.clickPhrase)
+    void this.showGeneratedPhrase('click', this.clickPhrase)
   }
 
   private notify(): void { for (const listener of this.listeners) listener() }

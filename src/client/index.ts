@@ -8,8 +8,8 @@ import { BackgroundController } from './background-controller.ts'
 import { BackgroundSettingsSection } from './BackgroundSettingsSection.tsx'
 import { DesktopPetController } from './desk-pet-controller.ts'
 import { PetSettingsSection } from './PetSettingsSection.tsx'
-import { PET_END_PHRASE, PET_START_PHRASE } from '../pet-state.ts'
 import { DesktopPetInteractionController } from './pet-interaction.ts'
+import { createPetPhraseProvider } from './pet-phrase.ts'
 import './custom-background.module.css'
 
 const BODY_ATTRIBUTE = 'data-dsh-custom-background'
@@ -25,27 +25,23 @@ export function apply(ctx: ClientContext): void {
   const background = new BackgroundController(BACKGROUND_ART)
   const desktopPet = new DesktopPetController(DESK_PET_ART, {
     id: 'primary',
-    clickPhrase: '早上好，桑多涅～',
     activityKind: 'start',
-    activityPhrase: PET_START_PHRASE,
     defaultSize: 220,
     defaultName: '哥伦比娅',
     defaultPersonality: '你是哥伦比娅：冷静、神秘、偶尔温柔，使用简洁而带有诗意的中文。',
-    autoStart: false,
   })
   const secondPet = new DesktopPetController(SECOND_PET_ART, {
     id: 'secondary',
-    clickPhrase: '你要干嘛，哥伦比娅 ? !',
     activityKind: 'end',
-    activityPhrase: PET_END_PHRASE,
     defaultSize: 180,
     defaultName: '桑多涅',
     defaultPersonality: '你是桑多涅：直率、慵懒、嘴硬但关心对方，使用自然的中文口语。',
-    autoStart: false,
   })
   let interactions: DesktopPetInteractionController | undefined
   ctx.inject(['sessions'], (sessionCtx: ClientContext) => {
     interactions = new DesktopPetInteractionController(sessionCtx.sessions, { primary: desktopPet, secondary: secondPet })
+    desktopPet.setPhraseProvider(createPetPhraseProvider(sessionCtx.sessions, () => desktopPet.personality(), 'start'))
+    secondPet.setPhraseProvider(createPetPhraseProvider(sessionCtx.sessions, () => secondPet.personality(), 'end'))
   })
 
   ctx.inject(['slots'], (settingsCtx: ClientContext) => {
