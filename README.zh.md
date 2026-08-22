@@ -43,17 +43,25 @@
 
 ## 装进电脑
 
+### 从 npm 安装（推荐）
+
 ```sh
-cd our-cp-sugar
-pnpm install
-pnpm build
-dsh plugin --profile web add link:$(pwd)
+dsh plugin --profile web add @zyixi/our-cp-sugar
 ```
 
 然后重启或硬刷新 DSH Web GUI：
 
 - macOS：`Cmd + Shift + R`
 - Windows/Linux：`Ctrl + Shift + R`
+
+### 从源码构建（用于开发）
+
+```sh
+cd our-cp-sugar
+pnpm install
+pnpm build
+dsh plugin --profile web add link:$(pwd)
+```
 
 ## 开发三连
 

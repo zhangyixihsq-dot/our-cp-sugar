@@ -44,7 +44,18 @@ You just watch; they do the acting. Customize the backdrop, the character looks,
 
 ## Install
 
-### Build and install locally
+### Install from npm (recommended)
+
+```sh
+dsh plugin --profile web add @zyixi/our-cp-sugar
+```
+
+Then restart or hard-refresh the DSH Web GUI:
+
+- macOS: `Cmd + Shift + R`
+- Windows/Linux: `Ctrl + Shift + R`
+
+### Build from source (for development)
 
 ```sh
 cd our-cp-sugar
@@ -52,11 +63,6 @@ pnpm install
 pnpm build
 dsh plugin --profile web add link:$(pwd)
 ```
-
-Then restart or hard-refresh the DSH Web GUI:
-
-- macOS: `Cmd + Shift + R`
-- Windows/Linux: `Ctrl + Shift + R`
 
 ## Development
 

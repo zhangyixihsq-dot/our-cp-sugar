@@ -1,8 +1,8 @@
 {
-  "name": "our-cp-sugar",
+  "name": "@zyixi/our-cp-sugar",
   "description": "DSH Web GUI plugin with a custom wallpaper and two activity-aware animated desktop pets.",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
@@ -33,6 +33,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json && tsdown",
     "prepare": "tsdown",
+    "prepublishOnly": "npm run build",
     "watch": "tsdown --watch",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
@@ -66,5 +67,8 @@
     "README.zh.md",
     "README.i18n.yaml"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "UNLICENSED"
 }
