@@ -77,7 +77,7 @@ export class DesktopPetController implements DesktopPetHandle {
     this.activityKind = options.activityKind ?? 'start'
     this.activityPhrase = options.activityPhrase ?? (this.activityKind === 'end' ? PET_END_PHRASE : PET_START_PHRASE)
     this.visibleValue = readVisible(this.id)
-    this.sizeValue = readSize(this.id, options.defaultSize ?? 220)
+    this.sizeValue = readSize(this.id, options.defaultSize ?? 140)
     this.nameValue = readName(this.id, options.defaultName ?? (this.id === 'secondary' ? '桑多涅' : '哥伦比娅'))
     this.imageValue = art
     this.personalityValue = readPersonality(this.id, options.defaultPersonality ?? '')

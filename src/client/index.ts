@@ -27,14 +27,14 @@ export function apply(ctx: ClientContext): void {
   const desktopPet = new DesktopPetController(DESK_PET_ART, {
     id: 'primary',
     activityKind: 'start',
-    defaultSize: 220,
+    defaultSize: 140,
     defaultName: '哥伦比娅',
     defaultPersonality: '你是哥伦比娅：冷静、神秘、偶尔温柔，使用简洁而带有诗意的中文。',
   })
   const secondPet = new DesktopPetController(SECOND_PET_ART, {
     id: 'secondary',
     activityKind: 'end',
-    defaultSize: 180,
+    defaultSize: 140,
     defaultName: '桑多涅',
     defaultPersonality: '你是桑多涅：直率、慵懒、嘴硬但关心对方，使用自然的中文口语。',
   })
