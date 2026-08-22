@@ -46,7 +46,7 @@
 ### 从 npm 安装（推荐）
 
 ```sh
-dsh plugin --profile web add @zyixi/our-cp-sugar
+dsh plugin --profile web add -w @zyixi/our-cp-sugar
 ```
 
 然后重启或硬刷新 DSH Web GUI：
@@ -60,7 +60,7 @@ dsh plugin --profile web add @zyixi/our-cp-sugar
 cd our-cp-sugar
 pnpm install
 pnpm build
-dsh plugin --profile web add link:$(pwd)
+dsh plugin --profile web add -w link:$(pwd)
 ```
 
 ## 使用

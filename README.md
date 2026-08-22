@@ -47,7 +47,7 @@ You just watch; they do the acting. Customize the backdrop, the character looks,
 ### Install from npm (recommended)
 
 ```sh
-dsh plugin --profile web add @zyixi/our-cp-sugar
+dsh plugin --profile web add -w @zyixi/our-cp-sugar
 ```
 
 Then restart or hard-refresh the DSH Web GUI:
@@ -61,7 +61,7 @@ Then restart or hard-refresh the DSH Web GUI:
 cd our-cp-sugar
 pnpm install
 pnpm build
-dsh plugin --profile web add link:$(pwd)
+dsh plugin --profile web add -w link:$(pwd)
 ```
 
 ## Usage
