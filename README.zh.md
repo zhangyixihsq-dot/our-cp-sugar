@@ -2,27 +2,46 @@
 
 [English](README.md) | 中文
 
-`our-cp-sugar` 是一个 DSH Web GUI 插件：将背景插画内嵌到页面，并提供随亮暗主题切换的可读性遮罩、半透明应用界面与两只动画桌宠。
+让二次元家产自动“产粮”的 DSH 桌面插件。
 
-## 是什么
+你负责嗑，家产负责营业；你负责围观，它们负责演。背景图、角色形象、性格 Prompt 都能自定义，按一下互动按钮，两位家产立刻用自己独立的小脑瓜开始互撩、拌嘴或走剧情。
 
-- 通过 `dsh.client.platform: web` 声明的 DSH 标准浏览器插件通道加载。
-- 背景图保存在 `assets/wallpaper.png`，构建时内嵌到 `lib/client.js`，以居中、覆盖、固定方式铺满视口。
-- 在 DSH 设置页提供持久化的 0-100% 背景变浅滑杆：0% 保持原图，向右逐渐变浅。
-- 提供持久化的 100-300% 图片饱和度滑杆：100% 保持当前图片效果，向右继续增强颜色。
-- 提供自定义背景图上传：上传后可拖动取景框、用缩放滑杆调整构图，确认后按屏幕像素比输出更高分辨率（最高约 3840×2160）并保存在本地，可随时恢复默认背景。
-- 将透明动画 `assets/desk-pet.png`（哥伦比娅）和 `assets/desk-pet-2.gif`（桑多涅）显示在右下角；两只都可拖动移动，并在本地保存位置。
-- 点击哥伦比娅时显示“早上好，桑多涅～”；点击桑多涅时显示“你要干嘛，哥伦比娅 ? !”。
-- 设置页可分别控制两只桌宠的显示/隐藏和 100-360px 大小，配置会保存在本地。
-- 设置页为每只桌宠提供可编辑的性格 Prompt，作为该桌宠独立会话的基础角色设定。
-- 鼠标悬浮在任意桌宠上会显示“互动”按钮，点击后由该桌宠发起对话；双方按各自性格 Prompt 在独立 session 中轮流回复，最多 10 轮，结束后保存互动记录，可在设置页查看或删除。
-- `data-ds-dark-theme` 变化时自动切换亮色与暗色可读性遮罩。
-- 安装皮肤中心时，兼容其 `--dsw-skin-scrim` 背景遮挡变量。
-- 插件卸载时恢复原有 body 背景并移除自己的作用域属性。
+> 纯浏览器插件：host 入口是空壳，真正干活的都在客户端 bundle 里。
 
-## 安装
+## 它到底会干什么
 
-### 本地构建并安装
+### 片场布景（背景图）
+
+- 内置 `assets/wallpaper.png`，铺满屏幕给家产当片场。
+- 「背景变浅」滑杆（0–100%，默认 0%）负责拯救阅读困难户，给画面罩一层白纱，又不耽误你嗑。
+- 「图片饱和度」滑杆（100–300%，默认 100%）负责让画面从“素颜滤镜”切到“满屏浓颜”。
+- 支持自定义背景图上传：选图后能拖动取景、缩放构图，确认后按显示器分辨率重画（最高约 3840×2160），不满意一键恢复默认。
+- 亮暗主题自动换遮罩，皮肤中心的 `--dsw-skin-scrim` 也给你让路。
+
+### 两位家产（桌宠）
+
+- 右下角常驻两位可拖动家产：
+  - 哥伦比娅（`assets/desk-pet.png`）——冷静神秘担当
+  - 桑多涅（`assets/desk-pet-2.gif`）——直率嘴硬、其实很在意你的担当
+- 它们会偷看宿主模型干活：`/api/yixi-custom-pet/state` 里回合开始、回合结束，对应家产会冒个泡。
+- 点一下还会说一句角色台词。
+- 「桌宠」设置页里，每位家产都可以：
+  - 开关显示
+  - 100–360px 大小滑杆
+  - 铅笔图标内联改名字
+  - 换头像/GIF（存 IndexedDB，单张 ≤30MB，带预览和恢复默认）
+  - 写性格 Prompt
+- 显示、大小、位置、名字、性格统统本地记住，下次打开还在。
+
+### 家产营业（互动产粮）
+
+- 鼠标一悬停，家产头上就冒出「互动」按钮。
+- 点谁谁先开口，主动权给到位。
+- 两位各自开独立 session，用各自性格 Prompt 当人设底牌。
+- 最多互相说 **10 轮**，只输出短句台词，不整动作、心理或旁白，中间还会停顿一下让你看清。
+- 产出的粮（互动记录）本地保存，可在设置页展开、删除或一键清空。
+
+## 装进电脑
 
 ```sh
 cd our-cp-sugar
@@ -31,19 +50,62 @@ pnpm build
 dsh plugin --profile web add link:$(pwd)
 ```
 
-安装后重启或刷新 DSH Web GUI。
+然后重启或硬刷新 DSH Web GUI：
 
-## 配置
+- macOS：`Cmd + Shift + R`
+- Windows/Linux：`Ctrl + Shift + R`
 
-背景变浅程度可在 DSH 设置页调整，默认值为 0%；图片饱和度默认值为 100%，可继续提高到 300%。设置页可以分别调整哥伦比娅和桑多涅的显示状态与大小。更换图片时覆盖 `assets/wallpaper.png` 并重新构建即可。皮肤中心的背景遮挡继续通过 `--dsw-skin-scrim` 生效。
+## 开发三连
 
-## 已知限制
+```sh
+pnpm typecheck
+pnpm test
+pnpm build
+# 边改边看
+pnpm watch
+```
 
-- 自定义背景图由浏览器 canvas 处理并保存在 localStorage，浏览器可能限制单张图片的存储大小。
-- 半透明层依赖当前 DSH 的主题 token 名称。
-- 内嵌图片由用户提供，本包未授予其对外再分发许可。
-- 桌宠互动依赖浏览器端 DSH session runtime；连接不可用时互动会跳过，不影响主聊天。
+## 道具都藏哪了
+
+- 背景变浅、饱和度、自定义背景 data URL：`localStorage`
+- 家产显示、大小、位置、名字、性格：`localStorage`
+- 互动记录：`localStorage`
+- 家产图片/GIF：`IndexedDB`（`our-cp-sugar` / `pet-images`）
+
+## 想换默认素材
+
+直接替换 `assets/` 里的文件再重新构建：
+
+- `assets/wallpaper.png`
+- `assets/desk-pet.png`
+- `assets/desk-pet-2.gif`
+
+构建时会被内嵌进 `lib/client.js`。
+
+## 项目结构
+
+```text
+src/index.ts                           host 端空入口
+src/client/index.ts                     浏览器入口
+src/client/background-controller.ts     片场布景与持久化
+src/client/BackgroundSettingsSection.tsx
+src/client/wallpaper-upload.ts          裁剪/缩放逻辑
+src/client/desk-pet-controller.ts       家产渲染、拖动、设置、图片存储
+src/client/pet-interaction.ts           家产自动营业的对话引擎
+src/client/PetSettingsSection.tsx
+src/pet-state.ts                        活动状态辅助
+assets/
+tests/
+```
+
+## 已知的“不能”
+
+- 自定义背景存的是 data URL，太大可能撞上浏览器 `localStorage` 配额。
+- 家产图片存 IndexedDB，单张上限 30MB；再大就不是头像，是电影了。
+- 半透明界面依赖 DSH 主题 token 名。
+- 家产互动需要浏览器端 DSH session runtime；连不上就暂时罢演，不影响主聊天。
+- 内置图片仅供本地自用，不授权对外分发。
 
 ## 许可证
 
-UNLICENSED。这是仅供本地使用的私有包。
+UNLICENSED。私人粮仓，仅供本地使用。

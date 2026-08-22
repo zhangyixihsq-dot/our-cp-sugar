@@ -1,11 +1,12 @@
-import { useSyncExternalStore } from 'react'
+import { useRef, useState, useSyncExternalStore, type ChangeEvent } from 'react'
 import type { DesktopPetHandle } from './desk-pet-controller.ts'
 import css from './custom-background.module.css'
 import type { PetInteractionManager } from './pet-interaction.ts'
 
+const MAX_PET_IMAGE_BYTES = 30 * 1024 * 1024
+
 export interface PetSettingsItem {
   id: string
-  label: string
   pet: DesktopPetHandle
 }
 
@@ -21,9 +22,62 @@ function PetControl({ item, chinese }: { item: PetSettingsItem; chinese: boolean
   const visible = useSyncExternalStore(item.pet.subscribe.bind(item.pet), item.pet.visible.bind(item.pet))
   const size = useSyncExternalStore(item.pet.subscribe.bind(item.pet), item.pet.size.bind(item.pet))
   const personality = useSyncExternalStore(item.pet.subscribe.bind(item.pet), item.pet.personality.bind(item.pet))
+  const name = useSyncExternalStore(item.pet.subscribe.bind(item.pet), item.pet.name.bind(item.pet))
+  const imageUrl = useSyncExternalStore(item.pet.subscribe.bind(item.pet), item.pet.imageSource.bind(item.pet))
+  const isCustomImage = useSyncExternalStore(item.pet.subscribe.bind(item.pet), item.pet.isCustomImage.bind(item.pet))
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [imageStatus, setImageStatus] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(name)
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (file === undefined) return
+    if (file.size > MAX_PET_IMAGE_BYTES) {
+      setImageStatus(chinese ? '图片不能超过 30MB' : 'Image must be under 30MB')
+      return
+    }
+    item.pet.setImage(file)
+    setImageStatus(chinese ? '已更新图片' : 'Image updated')
+  }
+
+  const startEditing = (): void => {
+    setDraft(name)
+    setEditing(true)
+  }
+
+  const commitName = (): void => {
+    item.pet.setName(draft)
+    setEditing(false)
+  }
+
+  const cancelName = (): void => {
+    setDraft(name)
+    setEditing(false)
+  }
+
   return (
     <div className={css.petSettingsItem}>
-      <h3 className={css.petSettingsName}>{item.label}</h3>
+      <div className={css.petNameRow}>
+        {editing ? (
+          <input
+            className={css.petNameInput}
+            value={draft}
+            autoFocus
+            aria-label={chinese ? '编辑宠物名称' : 'Edit pet name'}
+            onChange={(event) => { setDraft(event.target.value) }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') { event.preventDefault(); commitName() }
+              else if (event.key === 'Escape') { cancelName() }
+            }}
+            onBlur={commitName}
+          />
+        ) : (
+          <h3 className={css.petSettingsName}>{name}</h3>
+        )}
+        <button type="button" className={css.petNameEditButton} onClick={editing ? commitName : startEditing} aria-label={editing ? (chinese ? '保存名称' : 'Save name') : (chinese ? '编辑名称' : 'Edit name')}>{editing ? '✓' : '✎'}</button>
+      </div>
       <label className={css.settingsToggle} htmlFor={`custom-pet-visible-${item.id}`}>
         <input
           id={`custom-pet-visible-${item.id}`}
@@ -54,6 +108,16 @@ function PetControl({ item, chinese }: { item: PetSettingsItem; chinese: boolean
           <span>360px</span>
         </div>
       </div>
+      <div className={css.settingsControl}>
+        <div className={css.petImageActions}>
+          <img className={css.petPreview} src={imageUrl} alt={name} />
+          <span className={css.settingsLabel}>{chinese ? '宠物图片' : 'Pet image'}</span>
+          <button type="button" className={css.uploadButton} onClick={() => { fileRef.current?.click() }}>{chinese ? '更换图片' : 'Change image'}</button>
+          {isCustomImage && <button type="button" className={css.uploadButton} onClick={() => { item.pet.resetImage(); setImageStatus('') }}>{chinese ? '恢复默认' : 'Reset'}</button>}
+        </div>
+        <input ref={fileRef} className={css.fileInput} type="file" accept="image/*" onChange={handleImageChange} />
+        {imageStatus !== '' && <p className={css.uploadStatus} role="status">{imageStatus}</p>}
+      </div>
       <label className={css.settingsControl} htmlFor={`custom-pet-personality-${item.id}`}>
         <span className={css.settingsLabel}>{chinese ? '性格 Prompt' : 'Personality prompt'}</span>
         <textarea
@@ -73,6 +137,7 @@ function PetControl({ item, chinese }: { item: PetSettingsItem; chinese: boolean
 export function PetSettingsSection({ pets, interactions }: PetSettingsInjected) {
   const chinese = document.documentElement.lang.toLowerCase().startsWith('zh')
   const records = useSyncExternalStore(interactions?.subscribe.bind(interactions) ?? NOOP_SUBSCRIBE, interactions?.records.bind(interactions) ?? (() => EMPTY_RECORDS))
+
   return (
     <section className={css.settingsSection} aria-labelledby="custom-pet-settings-title">
       <header className={css.settingsHeader}>
@@ -89,7 +154,7 @@ export function PetSettingsSection({ pets, interactions }: PetSettingsInjected) 
         {records.length === 0 ? <p className={css.recordEmpty}>{chinese ? '还没有互动记录' : 'No interactions yet'}</p> : <div className={css.recordList}>
           {records.map(record => <details key={record.id} className={css.recordItem}>
             <summary>{new Date(record.createdAt).toLocaleString()} · {record.turns.length} {chinese ? '轮' : 'turns'}</summary>
-            <div className={css.recordTurns}>{record.turns.map((turn, index) => <p key={`${record.id}-${index}`}><strong>{turn.pet === 'primary' ? '哥伦比娅' : '桑多涅'}</strong>：{turn.text}</p>)}</div>
+            <div className={css.recordTurns}>{record.turns.map((turn, index) => <p key={`${record.id}-${index}`}><strong>{turn.petName ?? (turn.pet === 'primary' ? '哥伦比娅' : '桑多涅')}</strong>：{turn.text}</p>)}</div>
             <button type="button" className={css.recordAction} onClick={() => { interactions.deleteRecord(record.id) }}>{chinese ? '删除' : 'Delete'}</button>
           </details>)}
         </div>}

@@ -29,6 +29,7 @@ export function apply(ctx: ClientContext): void {
     activityKind: 'start',
     activityPhrase: PET_START_PHRASE,
     defaultSize: 220,
+    defaultName: '哥伦比娅',
     defaultPersonality: '你是哥伦比娅：冷静、神秘、偶尔温柔，使用简洁而带有诗意的中文。',
     autoStart: false,
   })
@@ -38,6 +39,7 @@ export function apply(ctx: ClientContext): void {
     activityKind: 'end',
     activityPhrase: PET_END_PHRASE,
     defaultSize: 180,
+    defaultName: '桑多涅',
     defaultPersonality: '你是桑多涅：直率、慵懒、嘴硬但关心对方，使用自然的中文口语。',
     autoStart: false,
   })
@@ -63,8 +65,8 @@ export function apply(ctx: ClientContext): void {
       order: 130,
       label: () => document.documentElement.lang.toLowerCase().startsWith('zh') ? '桌宠' : 'Desktop pet',
       inject: () => ({ pets: [
-        { id: 'primary', label: '哥伦比娅', pet: desktopPet },
-        { id: 'secondary', label: '桑多涅', pet: secondPet },
+        { id: 'primary', pet: desktopPet },
+        { id: 'secondary', pet: secondPet },
       ], ...(interactions === undefined ? {} : { interactions }) }),
     }, PetSettingsSection))
   })

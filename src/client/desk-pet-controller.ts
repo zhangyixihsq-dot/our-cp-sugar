@@ -8,6 +8,10 @@ const VISIBLE_STORAGE_KEY = 'dsh-custom-background.pet-visible'
 const SIZE_STORAGE_PREFIX = 'dsh-custom-background.pet-size.'
 const POSITION_STORAGE_PREFIX = 'dsh-custom-background.pet-position.'
 const PERSONALITY_STORAGE_PREFIX = 'dsh-custom-background.pet-personality.'
+const NAME_STORAGE_PREFIX = 'dsh-custom-background.pet-name.'
+const IMAGE_DB_NAME = 'our-cp-sugar'
+const IMAGE_DB_VERSION = 1
+const IMAGE_STORE = 'pet-images'
 
 export interface DesktopPetHandle {
   visible(): boolean
@@ -16,6 +20,12 @@ export interface DesktopPetHandle {
   setSize(value: number): void
   subscribe(listener: () => void): () => void
   onInteract(listener: () => void): () => void
+  name(): string
+  setName(value: string): void
+  imageSource(): string
+  isCustomImage(): boolean
+  setImage(file: Blob): void
+  resetImage(): void
   personality(): string
   setPersonality(value: string): void
   speak(text: string): void
@@ -27,6 +37,7 @@ export interface DesktopPetOptions {
   activityKind?: 'start' | 'end'
   activityPhrase?: string
   defaultSize?: number
+  defaultName?: string
   defaultPersonality?: string
   autoStart?: boolean
   fetcher?: typeof fetch
@@ -45,6 +56,7 @@ export class DesktopPetController implements DesktopPetHandle {
   private readonly clickPhrase: string | undefined
   private readonly activityKind: 'start' | 'end'
   private readonly activityPhrase: string
+  private readonly defaultArt: string
   private readonly listeners = new Set<() => void>()
   private readonly interactListeners = new Set<() => void>()
   private pollTimer: number | undefined
@@ -52,12 +64,18 @@ export class DesktopPetController implements DesktopPetHandle {
   private lastActivitySequence: number | undefined
   private visibleValue: boolean
   private sizeValue: number
+  private nameValue: string
+  private imageValue: string
+  private imageCustom = false
+  private imageObjectUrl: string | undefined
+  private imageRevision = 0
   private personalityValue: string
   private drag: { startX: number; startY: number; right: number; bottom: number } | undefined
   private dragged = false
   private disposed = false
 
   constructor(art: string, options: DesktopPetOptions = {}) {
+    this.defaultArt = art
     this.fetcher = options.fetcher ?? globalThis.fetch.bind(globalThis)
     this.pollMs = options.pollMs ?? DEFAULT_POLL_MS
     this.id = options.id ?? 'primary'
@@ -66,12 +84,14 @@ export class DesktopPetController implements DesktopPetHandle {
     this.activityPhrase = options.activityPhrase ?? (this.activityKind === 'end' ? PET_END_PHRASE : PET_START_PHRASE)
     this.visibleValue = readVisible(this.id)
     this.sizeValue = readSize(this.id, options.defaultSize ?? 220)
+    this.nameValue = readName(this.id, options.defaultName ?? (this.id === 'secondary' ? '桑多涅' : '哥伦比娅'))
+    this.imageValue = art
     this.personalityValue = readPersonality(this.id, options.defaultPersonality ?? '')
 
     this.root.className = css.petRoot
     this.root.dataset.dshCustomPet = ''
     this.root.dataset.petId = this.id
-    this.root.setAttribute('aria-label', this.id === 'secondary' ? '桑多涅桌宠' : '哥伦比娅桌宠')
+    this.root.setAttribute('aria-label', `${this.nameValue}桌宠`)
     this.root.hidden = !this.visibleValue
     this.root.style.width = `${this.sizeValue}px`
     this.restorePosition()
@@ -79,7 +99,7 @@ export class DesktopPetController implements DesktopPetHandle {
     this.bubble.className = css.petBubble
     this.bubble.setAttribute('aria-live', 'polite')
     this.image.className = css.petImage
-    this.image.src = art
+    this.image.src = this.imageValue
     this.image.alt = ''
     this.image.draggable = false
     this.image.setAttribute('aria-hidden', 'true')
@@ -98,6 +118,7 @@ export class DesktopPetController implements DesktopPetHandle {
     this.root.addEventListener('mouseenter', this.onMouseEnter)
     this.root.addEventListener('mouseleave', this.onMouseLeave)
     this.interactButton.addEventListener('click', this.onInteractClick)
+    void this.loadCustomImage()
     if (options.autoStart !== false) this.start()
   }
 
@@ -169,6 +190,60 @@ export class DesktopPetController implements DesktopPetHandle {
     return () => { this.interactListeners.delete(listener) }
   }
 
+  name(): string { return this.nameValue }
+
+  setName(value: string): void {
+    const next = value.trim().slice(0, 40) || (this.id === 'secondary' ? '桑多涅' : '哥伦比娅')
+    if (next === this.nameValue) return
+    this.nameValue = next
+    this.root.setAttribute('aria-label', `${next}桌宠`)
+    try { window.localStorage.setItem(NAME_STORAGE_PREFIX + this.id, next) } catch { /* optional */ }
+    this.notify()
+  }
+
+  imageSource(): string { return this.imageValue }
+
+  isCustomImage(): boolean { return this.imageCustom }
+
+  setImage(file: Blob): void {
+    if (this.disposed) return
+    const nextUrl = URL.createObjectURL(file)
+    if (this.imageObjectUrl !== undefined) URL.revokeObjectURL(this.imageObjectUrl)
+    this.imageObjectUrl = nextUrl
+    this.imageValue = nextUrl
+    this.imageCustom = true
+    this.imageRevision += 1
+    this.image.src = nextUrl
+    void saveImageBlob(this.id, file)
+    this.notify()
+  }
+
+  resetImage(): void {
+    if (!this.imageCustom) return
+    if (this.imageObjectUrl !== undefined) {
+      URL.revokeObjectURL(this.imageObjectUrl)
+      this.imageObjectUrl = undefined
+    }
+    this.imageCustom = false
+    this.imageRevision += 1
+    this.imageValue = this.defaultArt
+    this.image.src = this.defaultArt
+    void deleteImageBlob(this.id)
+    this.notify()
+  }
+
+  private async loadCustomImage(): Promise<void> {
+    const revision = this.imageRevision
+    const blob = await loadImageBlob(this.id)
+    if (this.disposed || blob === undefined || revision !== this.imageRevision) return
+    const nextUrl = URL.createObjectURL(blob)
+    this.imageObjectUrl = nextUrl
+    this.imageValue = nextUrl
+    this.imageCustom = true
+    this.image.src = nextUrl
+    this.notify()
+  }
+
   personality(): string { return this.personalityValue }
 
   setPersonality(value: string): void {
@@ -183,6 +258,8 @@ export class DesktopPetController implements DesktopPetHandle {
 
   dispose(): void {
     this.disposed = true
+    if (this.imageObjectUrl !== undefined) URL.revokeObjectURL(this.imageObjectUrl)
+    this.imageObjectUrl = undefined
     if (this.pollTimer !== undefined) window.clearInterval(this.pollTimer)
     if (this.bubbleTimer !== undefined) window.clearTimeout(this.bubbleTimer)
     document.removeEventListener('visibilitychange', this.onVisibilityChange)
@@ -311,4 +388,74 @@ function readSize(id: string, fallback: number): number {
 
 function readPersonality(id: string, fallback: string): string {
   try { return window.localStorage.getItem(PERSONALITY_STORAGE_PREFIX + id) ?? fallback } catch { return fallback }
+}
+
+function readName(id: string, fallback: string): string {
+  try { return window.localStorage.getItem(NAME_STORAGE_PREFIX + id) ?? fallback } catch { return fallback }
+}
+
+function openImageDatabase(): Promise<IDBDatabase | undefined> {
+  if (typeof indexedDB === 'undefined') return Promise.resolve(undefined)
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(IMAGE_DB_NAME, IMAGE_DB_VERSION)
+    request.onupgradeneeded = () => {
+      const db = request.result
+      if (!db.objectStoreNames.contains(IMAGE_STORE)) db.createObjectStore(IMAGE_STORE)
+    }
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error ?? new Error('IndexedDB open failed'))
+  })
+}
+
+async function loadImageBlob(id: string): Promise<Blob | undefined> {
+  const db = await openImageDatabase().catch(() => undefined)
+  if (db === undefined) return undefined
+  try {
+    return await new Promise<Blob | undefined>((resolve, reject) => {
+      const transaction = db.transaction(IMAGE_STORE, 'readonly')
+      const request = transaction.objectStore(IMAGE_STORE).get(id)
+      request.onsuccess = () => resolve(request.result instanceof Blob ? request.result : undefined)
+      request.onerror = () => reject(request.error ?? new Error('IndexedDB get failed'))
+    })
+  } catch {
+    return undefined
+  } finally {
+    db.close()
+  }
+}
+
+async function saveImageBlob(id: string, blob: Blob): Promise<void> {
+  const db = await openImageDatabase().catch(() => undefined)
+  if (db === undefined) return
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(IMAGE_STORE, 'readwrite')
+      transaction.objectStore(IMAGE_STORE).put(blob, id)
+      transaction.oncomplete = () => resolve()
+      transaction.onerror = () => reject(transaction.error ?? new Error('IndexedDB put failed'))
+      transaction.onabort = () => reject(transaction.error ?? new Error('IndexedDB put aborted'))
+    })
+  } catch {
+    // Image persistence is optional and must not break the live preview.
+  } finally {
+    db.close()
+  }
+}
+
+async function deleteImageBlob(id: string): Promise<void> {
+  const db = await openImageDatabase().catch(() => undefined)
+  if (db === undefined) return
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(IMAGE_STORE, 'readwrite')
+      transaction.objectStore(IMAGE_STORE).delete(id)
+      transaction.oncomplete = () => resolve()
+      transaction.onerror = () => reject(transaction.error ?? new Error('IndexedDB delete failed'))
+      transaction.onabort = () => reject(transaction.error ?? new Error('IndexedDB delete aborted'))
+    })
+  } catch {
+    // Image persistence is optional.
+  } finally {
+    db.close()
+  }
 }

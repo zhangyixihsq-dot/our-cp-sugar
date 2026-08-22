@@ -8,7 +8,7 @@ const READ_PAUSE_MS = 2600
 export interface PetInteractionRecord {
   id: string
   createdAt: number
-  turns: readonly { pet: string; text: string }[]
+  turns: readonly { pet: string; petName?: string; text: string }[]
 }
 
 export interface PetInteractionManager {
@@ -73,7 +73,7 @@ export class DesktopPetInteractionController implements PetInteractionManager {
   private async startInteraction(initiator: PetId): Promise<void> {
     if (this.busy || this.disposed) return
     this.busy = true
-    const turns: { pet: string; text: string }[] = []
+    const turns: { pet: string; petName?: string; text: string }[] = []
     try {
       const sessionService = this.sessions as ISessions & { create(): Promise<SessionId> }
       if (typeof sessionService.create !== 'function') {
@@ -100,7 +100,7 @@ export class DesktopPetInteractionController implements PetInteractionManager {
         if (!result.ok) break
         const text = await waitForAssistant(session, previous)
         if (!text) break
-        turns.push({ pet: next, text })
+        turns.push({ pet: next, petName: pet.name(), text })
         pet.speak(text)
         await wait(READ_PAUSE_MS)
         context = `对方刚才说：“${text}”\n请只回复一句对话台词，不要描述动作或心情。`
@@ -177,5 +177,9 @@ function isRecord(value: unknown): value is PetInteractionRecord {
   if (typeof value !== 'object' || value === null) return false
   const item = value as Partial<PetInteractionRecord>
   return typeof item.id === 'string' && typeof item.createdAt === 'number' && Array.isArray(item.turns)
-    && item.turns.every(turn => typeof turn === 'object' && turn !== null && typeof (turn as { pet?: unknown }).pet === 'string' && typeof (turn as { text?: unknown }).text === 'string')
+    && item.turns.every(turn => {
+      if (typeof turn !== 'object' || turn === null) return false
+      const current = turn as { pet?: unknown; petName?: unknown; text?: unknown }
+      return typeof current.pet === 'string' && typeof current.text === 'string' && (current.petName === undefined || typeof current.petName === 'string')
+    })
 }

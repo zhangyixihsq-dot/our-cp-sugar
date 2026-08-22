@@ -76,4 +76,28 @@ describe('desktop pet activity', () => {
     controller = undefined
     expect(document.querySelector('[data-dsh-custom-pet]')).toBeNull()
   })
+
+  it('replaces the pet image from a Blob and restores the default', () => {
+    const createObjectURL = vi.fn(() => 'blob:mock-pet')
+    const revokeObjectURL = vi.fn()
+    Object.defineProperty(URL, 'createObjectURL', { value: createObjectURL, configurable: true, writable: true })
+    Object.defineProperty(URL, 'revokeObjectURL', { value: revokeObjectURL, configurable: true, writable: true })
+
+    controller = new DesktopPetController('data:image/gif;base64,dGVzdA==', { autoStart: false })
+    const img = document.querySelector<HTMLImageElement>('[data-dsh-custom-pet] img')
+
+    controller.setImage(new Blob(['gif'], { type: 'image/gif' }))
+
+    expect(createObjectURL).toHaveBeenCalledOnce()
+    expect(img?.src).toBe('blob:mock-pet')
+    expect(controller.isCustomImage()).toBe(true)
+    expect(controller.imageSource()).toBe('blob:mock-pet')
+
+    controller.resetImage()
+
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:mock-pet')
+    expect(img?.src).toBe('data:image/gif;base64,dGVzdA==')
+    expect(controller.isCustomImage()).toBe(false)
+    expect(controller.imageSource()).toBe('data:image/gif;base64,dGVzdA==')
+  })
 })

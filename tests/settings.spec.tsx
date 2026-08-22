@@ -68,7 +68,7 @@ describe('background settings section', () => {
       .toBe('saturate(200%)')
 
     act(() => {
-      root?.render(<PetSettingsSection pets={[{ id: 'primary', label: '哥伦比娅', pet: pet! }]} />)
+      root?.render(<PetSettingsSection pets={[{ id: 'primary', pet: pet! }]} />)
     })
     const petToggle = document.querySelector<HTMLInputElement>('#custom-pet-visible-primary')
     expect(petToggle?.checked).toBe(true)

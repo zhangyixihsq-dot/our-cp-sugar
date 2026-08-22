@@ -337,6 +337,70 @@ body[data-dsh-custom-background] .petSettingsName {
   line-height: 1.4;
 }
 
+body[data-dsh-custom-background] .petNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body[data-dsh-custom-background] .petNameRow .petNameInput {
+  flex: 1;
+  min-width: 0;
+}
+
+body[data-dsh-custom-background] .petNameEditButton {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--dsw-alias-border-l2, #cbd5e1);
+  border-radius: 6px;
+  background: var(--dsw-alias-bg-layer-1, rgb(255 255 255 / 0.72));
+  color: var(--dsw-alias-label-primary, #172a45);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+body[data-dsh-custom-background] .petNameEditButton:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary, #2b7cd9);
+  outline-offset: 2px;
+}
+
+body[data-dsh-custom-background] .petNameInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--dsw-alias-border-l2, #cbd5e1);
+  border-radius: 6px;
+  background: var(--dsw-alias-bg-layer-1, rgb(255 255 255 / 0.72));
+  color: var(--dsw-alias-label-primary, #172a45);
+  font: inherit;
+  line-height: 1.4;
+}
+
+body[data-dsh-custom-background] .petNameInput:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary, #2b7cd9);
+  outline-offset: 2px;
+}
+
+body[data-dsh-custom-background] .petImageActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+body[data-dsh-custom-background] .petPreview {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  object-fit: contain;
+  border: 1px solid var(--dsw-alias-border-l1, rgb(77 53 83 / 0.12));
+  border-radius: 6px;
+  background: var(--dsw-alias-bg-layer-1, rgb(255 255 255 / 0.72));
+}
+
 body[data-dsh-custom-background] .personalityInput {
   width: 100%;
   box-sizing: border-box;
