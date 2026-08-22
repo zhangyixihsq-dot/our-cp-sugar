@@ -63,6 +63,30 @@ pnpm build
 dsh plugin --profile web add link:$(pwd)
 ```
 
+## 使用
+
+```sh
+# 启动 Web 界面
+dsh web
+```
+
+打开 DSH 设置后：
+
+- 「背景图」——上传/调整背景，设置背景变浅和图片饱和度。
+- 「桌宠」——编辑每位家产的名字、图片/GIF、性格、显示和大小。
+
+鼠标悬停到家产上，点「互动」即可开始自动产粮。
+
+## 卸载
+
+```sh
+dsh plugin --profile web remove @zyixi/our-cp-sugar
+```
+
+然后重启或硬刷新 DSH Web GUI。
+
+> 卸载只会移除插件，不会自动清除浏览器里已经保存的自定义背景、名字、图片和互动记录。想彻底清空的话，需要到浏览器里清除该 DSH 站点的本地数据。
+
 ## 开发三连
 
 ```sh

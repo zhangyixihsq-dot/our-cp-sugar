@@ -64,6 +64,30 @@ pnpm build
 dsh plugin --profile web add link:$(pwd)
 ```
 
+## Usage
+
+```sh
+# Start the web UI
+dsh web
+```
+
+Then open DSH settings:
+
+- **Wallpaper** — upload or adjust the background, lightening, and saturation.
+- **Desktop pet** — edit each character's name, image/GIF, personality, visibility, and size.
+
+Hover over a pet and click **Interact** to start the auto-shipping conversation.
+
+## Uninstall
+
+```sh
+dsh plugin --profile web remove @zyixi/our-cp-sugar
+```
+
+Then restart or hard-refresh the DSH Web GUI.
+
+> Uninstalling removes the plugin but does not clear browser-side data already stored for the DSH site (wallpaper, pet names, images, and interaction records). Clear the site data in your browser if you want a full reset.
+
 ## Development
 
 ```sh
