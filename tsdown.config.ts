@@ -3,7 +3,7 @@ import { basename, dirname, extname, isAbsolute, relative, resolve, sep } from '
 import type { UserConfig } from 'tsdown'
 import { transform } from 'lightningcss'
 
-const PLUGIN_ID = 'our-cp-sugar'
+const PLUGIN_ID = '@zyixi/our-cp-sugar'
 const CSS_PREFIX = '\0dsh-css:'
 const CSS_SUFFIX = '.mjs'
 const ASSET_PREFIX = '\0dsh-asset:'
