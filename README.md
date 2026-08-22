@@ -24,7 +24,7 @@ You just watch; they do the acting. Customize the backdrop, the character looks,
 - Keeps two draggable characters parked in the lower-right corner:
   - 哥伦比娅 (`assets/desk-pet.png`) — the cool, mysterious one
   - 桑多涅 (`assets/desk-pet-2.gif`) — the blunt, lazy, secretly caring one
-- They peek at host model activity through `/api/yixi-custom-pet/state`: 哥伦比娅 reacts to turn starts and 桑多涅 to turn ends.
+- They watch the current chat session's model turn directly: 哥伦比娅 reacts when a turn starts and 桑多涅 when it ends.
 - Click a character and it says a short in-character line.
 - The **Desktop pet** settings section gives each character:
   - Show/hide toggle

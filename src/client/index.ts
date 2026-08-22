@@ -10,6 +10,7 @@ import { DesktopPetController } from './desk-pet-controller.ts'
 import { PetSettingsSection } from './PetSettingsSection.tsx'
 import { DesktopPetInteractionController } from './pet-interaction.ts'
 import { createPetPhraseProvider } from './pet-phrase.ts'
+import { watchModelActivity } from './model-activity.ts'
 import './custom-background.module.css'
 
 const BODY_ATTRIBUTE = 'data-dsh-custom-background'
@@ -38,10 +39,16 @@ export function apply(ctx: ClientContext): void {
     defaultPersonality: '你是桑多涅：直率、慵懒、嘴硬但关心对方，使用自然的中文口语。',
   })
   let interactions: DesktopPetInteractionController | undefined
+  let stopModelActivity: (() => void) | undefined
   ctx.inject(['sessions'], (sessionCtx: ClientContext) => {
     interactions = new DesktopPetInteractionController(sessionCtx.sessions, { primary: desktopPet, secondary: secondPet })
     desktopPet.setPhraseProvider(createPetPhraseProvider(sessionCtx.sessions, () => desktopPet.personality(), 'start'))
     secondPet.setPhraseProvider(createPetPhraseProvider(sessionCtx.sessions, () => secondPet.personality(), 'end'))
+    stopModelActivity = watchModelActivity(
+      sessionCtx.sessions,
+      () => desktopPet.notifyActivity(),
+      () => secondPet.notifyActivity(),
+    )
   })
 
   ctx.inject(['slots'], (settingsCtx: ClientContext) => {
@@ -68,6 +75,7 @@ export function apply(ctx: ClientContext): void {
   })
 
   ctx.effect(() => () => {
+    stopModelActivity?.()
     desktopPet.dispose()
     secondPet.dispose()
     interactions?.dispose()

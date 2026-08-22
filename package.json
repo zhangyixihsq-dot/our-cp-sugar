@@ -1,7 +1,7 @@
 {
   "name": "@zyixi/our-cp-sugar",
   "description": "DSH Web GUI plugin with a custom wallpaper and two activity-aware animated desktop pets.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": false,
   "type": "module",
   "main": "lib/index.js",

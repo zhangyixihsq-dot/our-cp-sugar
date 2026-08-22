@@ -28,7 +28,7 @@ describe('background settings section', () => {
   it('updates lightness through the range input', () => {
     document.documentElement.lang = 'zh-CN'
     controller = new BackgroundController('data:image/png;base64,dGVzdA==')
-    pet = new DesktopPetController('data:image/gif;base64,dGVzdA==', { autoStart: false })
+    pet = new DesktopPetController('data:image/gif;base64,dGVzdA==')
     const container = document.createElement('div')
     document.body.appendChild(container)
     root = createRoot(container)

@@ -25,23 +25,12 @@ describe('desktop pet activity', () => {
     expect(recordPetActivity(state, 'turn/end', 40)).toBe(false)
   })
 
-  it('shows the requested phrase once a new turn is observed', async () => {
-    const state: PetActivityState = { sequence: 0, startedAt: 0, completedSequence: 0, completedAt: 0 }
-    const fetcher = vi.fn(async () => ({
-      ok: true,
-      json: async () => ({ ...state }),
-    }) as Response)
-
+  it('shows the requested phrase when activity is notified and reacts to clicks', async () => {
     controller = new DesktopPetController('data:image/gif;base64,dGVzdA==', {
-      autoStart: false,
-      fetcher,
       clickPhrase: '早上好，桑多涅～',
     })
 
-    await controller.refresh()
-    state.sequence = 1
-    state.startedAt = Date.now()
-    await controller.refresh()
+    controller.notifyActivity()
 
     const root = document.querySelector<HTMLElement>('[data-dsh-custom-pet]')
     expect(root).not.toBeNull()
@@ -56,15 +45,12 @@ describe('desktop pet activity', () => {
     controller.dispose()
     controller = undefined
     document.body.replaceChildren()
-    state.completedSequence = 1
-    state.completedAt = Date.now()
+
     controller = new DesktopPetController('data:image/gif;base64,dGVzdA==', {
-      autoStart: false,
-      fetcher,
       id: 'secondary',
       activityKind: 'end',
     })
-    await controller.refresh()
+    controller.notifyActivity()
     const secondaryRoot = document.querySelector<HTMLElement>('[data-pet-id="secondary"]')
     expect(secondaryRoot?.textContent).toContain(PET_END_PHRASE)
 
@@ -83,7 +69,7 @@ describe('desktop pet activity', () => {
     Object.defineProperty(URL, 'createObjectURL', { value: createObjectURL, configurable: true, writable: true })
     Object.defineProperty(URL, 'revokeObjectURL', { value: revokeObjectURL, configurable: true, writable: true })
 
-    controller = new DesktopPetController('data:image/gif;base64,dGVzdA==', { autoStart: false })
+    controller = new DesktopPetController('data:image/gif;base64,dGVzdA==')
     const img = document.querySelector<HTMLImageElement>('[data-dsh-custom-pet] img')
 
     controller.setImage(new Blob(['gif'], { type: 'image/gif' }))

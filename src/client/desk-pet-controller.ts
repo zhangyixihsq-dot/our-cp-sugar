@@ -1,10 +1,8 @@
 import css from './custom-background.module.css'
-import { isPetActivityState, PET_ACTIVITY_ENDPOINT, PET_END_PHRASE, PET_START_PHRASE } from '../pet-state.ts'
+import { PET_END_PHRASE, PET_START_PHRASE } from '../pet-state.ts'
 import type { PetPhraseProvider, PetPhraseKind } from './pet-phrase.ts'
 
-const DEFAULT_POLL_MS = 400
 const BUBBLE_VISIBLE_MS = 4800
-const RECENT_START_MS = 1600
 const VISIBLE_STORAGE_KEY = 'dsh-custom-background.pet-visible'
 const SIZE_STORAGE_PREFIX = 'dsh-custom-background.pet-size.'
 const POSITION_STORAGE_PREFIX = 'dsh-custom-background.pet-position.'
@@ -30,6 +28,7 @@ export interface DesktopPetHandle {
   personality(): string
   setPersonality(value: string): void
   setPhraseProvider(provider: PetPhraseProvider): void
+  notifyActivity(): void
   speak(text: string): void
 }
 
@@ -41,9 +40,6 @@ export interface DesktopPetOptions {
   defaultSize?: number
   defaultName?: string
   defaultPersonality?: string
-  autoStart?: boolean
-  fetcher?: typeof fetch
-  pollMs?: number
 }
 
 /** Renders one animated pet, with independent visibility, size and position. */
@@ -52,8 +48,6 @@ export class DesktopPetController implements DesktopPetHandle {
   private readonly bubble = document.createElement('div')
   private readonly image = document.createElement('img')
   private readonly interactButton = document.createElement('button')
-  private readonly fetcher: typeof fetch
-  private readonly pollMs: number
   private readonly id: string
   private readonly clickPhrase: string | undefined
   private readonly activityKind: 'start' | 'end'
@@ -61,9 +55,7 @@ export class DesktopPetController implements DesktopPetHandle {
   private readonly defaultArt: string
   private readonly listeners = new Set<() => void>()
   private readonly interactListeners = new Set<() => void>()
-  private pollTimer: number | undefined
   private bubbleTimer: number | undefined
-  private lastActivitySequence: number | undefined
   private visibleValue: boolean
   private sizeValue: number
   private nameValue: string
@@ -80,8 +72,6 @@ export class DesktopPetController implements DesktopPetHandle {
 
   constructor(art: string, options: DesktopPetOptions = {}) {
     this.defaultArt = art
-    this.fetcher = options.fetcher ?? globalThis.fetch.bind(globalThis)
-    this.pollMs = options.pollMs ?? DEFAULT_POLL_MS
     this.id = options.id ?? 'primary'
     this.clickPhrase = options.clickPhrase
     this.activityKind = options.activityKind ?? 'start'
@@ -113,7 +103,6 @@ export class DesktopPetController implements DesktopPetHandle {
     this.interactButton.hidden = true
     this.root.append(this.bubble, this.image, this.interactButton)
     document.body.appendChild(this.root)
-    document.addEventListener('visibilitychange', this.onVisibilityChange)
     this.image.addEventListener('pointerdown', this.onPointerDown)
     this.image.addEventListener('pointermove', this.onPointerMove)
     this.image.addEventListener('pointerup', this.onPointerUp)
@@ -123,38 +112,6 @@ export class DesktopPetController implements DesktopPetHandle {
     this.root.addEventListener('mouseleave', this.onMouseLeave)
     this.interactButton.addEventListener('click', this.onInteractClick)
     void this.loadCustomImage()
-    if (options.autoStart !== false) this.start()
-  }
-
-  start(): void {
-    if (this.disposed || this.pollTimer !== undefined) return
-    void this.refresh()
-    this.pollTimer = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void this.refresh()
-    }, this.pollMs)
-  }
-
-  async refresh(): Promise<void> {
-    if (this.disposed) return
-    try {
-      const response = await this.fetcher(PET_ACTIVITY_ENDPOINT, { cache: 'no-store' })
-      if (!response.ok) return
-      const state: unknown = await response.json()
-      if (!isPetActivityState(state)) return
-      const activitySequence = this.activityKind === 'end' ? state.completedSequence : state.sequence
-      const activityAt = this.activityKind === 'end' ? state.completedAt : state.startedAt
-      if (this.lastActivitySequence === undefined) {
-        this.lastActivitySequence = activitySequence
-        if (activitySequence > 0 && Date.now() - activityAt <= RECENT_START_MS) void this.showGeneratedPhrase('activity', this.activityPhrase)
-        return
-      }
-      if (activitySequence === this.lastActivitySequence) return
-      const movedForward = activitySequence > this.lastActivitySequence
-      this.lastActivitySequence = activitySequence
-      if (movedForward) void this.showGeneratedPhrase('activity', this.activityPhrase)
-    } catch {
-      // The host route may be unavailable briefly while the profile reloads.
-    }
   }
 
   visible(): boolean { return this.visibleValue }
@@ -262,15 +219,17 @@ export class DesktopPetController implements DesktopPetHandle {
     this.phraseProvider = provider
   }
 
+  notifyActivity(): void {
+    void this.showGeneratedPhrase('activity', this.activityPhrase)
+  }
+
   speak(text: string): void { this.showBubble(text) }
 
   dispose(): void {
     this.disposed = true
     if (this.imageObjectUrl !== undefined) URL.revokeObjectURL(this.imageObjectUrl)
     this.imageObjectUrl = undefined
-    if (this.pollTimer !== undefined) window.clearInterval(this.pollTimer)
     if (this.bubbleTimer !== undefined) window.clearTimeout(this.bubbleTimer)
-    document.removeEventListener('visibilitychange', this.onVisibilityChange)
     this.image.removeEventListener('pointerdown', this.onPointerDown)
     this.image.removeEventListener('pointermove', this.onPointerMove)
     this.image.removeEventListener('pointerup', this.onPointerUp)
@@ -282,10 +241,6 @@ export class DesktopPetController implements DesktopPetHandle {
     this.listeners.clear()
     this.interactListeners.clear()
     this.root.remove()
-  }
-
-  private readonly onVisibilityChange = (): void => {
-    if (document.visibilityState === 'visible') void this.refresh()
   }
 
   private readonly onMouseEnter = (): void => {
